@@ -58,7 +58,6 @@ def apply_proximity(tparams, operators):
 def train(options, data, load_params=False, start_epoc=0):
     print 'Setting up model with options:'
     options = set_defaults(options)
-    check_interval = 1
     for kk, vv in options.iteritems():
         print kk, vv
     rng = numpy.random.RandomState(options['model_seed'] + 100*options.get('fold', 99) + options.get('seed',99))
@@ -78,11 +77,7 @@ def train(options, data, load_params=False, start_epoc=0):
 
     trng, use_noise, inps, out = build_model(tparams, options, rng)
     y = tensor.imatrix('y')
-    obj = options.get('objective', 'nll')
-    if obj == 'nll':
-        cost = nll(out, y)
-    elif obj == 'kl':
-        cost = kl(out, y)
+    cost = nll(out, y)
      
     f_eval = theano.function([inps, y], cost,
                              givens={use_noise: numpy.float32(0.)},
@@ -114,44 +109,39 @@ def train(options, data, load_params=False, start_epoc=0):
     test = list_update(data[-1], f_eval, options['batch_size'], rng=rng)
     starting = (train, test)
     print 'Pre-training. test: %f, train: %f' % (test, train)
-
     print 'Training'
     lr = options['lr']
-    min_lr = options['min_lr']
-    max_lr = options['max_lr']
     max_itr = options['max_itr']
     grad_norm = 0.
-    old_train = train
-    check = 0 # when do we check for test performance
     train_scores = 50 * [0.]
     try:
         for epoch in xrange(max_itr):
             start_time = time.time()
             for g in gshared:
+                # manually set gradients to 0 because we accumulate in list update
                 g.set_value(0.0*g.get_value())
             use_noise.set_value(1.)
-            train_cost, n_obs = list_update(data[0], f_grad_shared,batchsize=options['batch_size'], rng=rng,
+            train_cost, n_obs = list_update(data[0],
+                                            f_grad_shared,
+                                            batchsize=options['batch_size'], 
+                                            rng=rng,
                                             return_n_obs=True)
             use_noise.set_value(0.)
             for g in gshared:
                 g.set_value(floatx(g.get_value() / float(n_obs)))
-            par_old = unzip(tparams)
             f_update(lr)
             apply_proximity(tparams, operators)
             train = list_update(data[0], f_eval, options['batch_size'], rng=rng)
-            old_train = train
             elapsed_time = time.time() - start_time
             
             if train < best:
+                # early stopping on training set
                 test = list_update(data[-1], f_eval)
                 best_par = unzip(tparams)
                 best_perf = (train, test)
                 best = train
-                check = 0
 
-            check = (check + 1) % check_interval
-            if check == 0:
-                test = list_update(data[-1], f_eval)
+            test = list_update(data[-1], f_eval)
             
             print 'Epoch: %d, cost: %f, train: %f, test: %f, lr:%f, time: %f' % (
                                                                     epoch,
@@ -165,17 +155,10 @@ def train(options, data, load_params=False, start_epoc=0):
                 # Save progress....
                 save_progress(options, tparams, epoch, best_perf)
 
-            # Check if we're diverging...
-            if epoch < 50:
-                train_scores[epoch] = train
-            else:
-                train_scores.pop(0)
-                train_scores.append(train)
-                train_ave = sum(train_scores) / 50.
+            train_ave = running_ave(train_scores, train, epoc)
+
             if epoch > 1000:
-                '''
-                Only exit if we're diverging after 1000 iterations
-                '''
+                # Only exit if we're diverging after 1000 iterations
                 if train_ave > 1.03*best_perf[0]:
                     print "Diverged..."
                     break
@@ -189,6 +172,17 @@ def train(options, data, load_params=False, start_epoc=0):
     print "%f,%f" % best_perf
     return best_perf, best_par 
 
+
+def running_ave(train_scores, train, epoc):
+    # Check if we're diverging...
+    if epoch < 50:
+        train_scores[epoch] = train
+    else:
+        # keep moving average of training set performance
+        train_scores.pop(0)
+        train_scores.append(train)
+        train_ave = sum(train_scores) / 50.
+    return train_ave 
 
 def sample_minibatch(data, batch_size=30, rng=numpy.random.RandomState(None)):
     games = []

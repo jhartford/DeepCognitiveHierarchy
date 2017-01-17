@@ -15,7 +15,6 @@ from layers import get_layer
 
 
 def set_defaults(options):
-    # Do we project onto the simplex?
     options['batch_size'] = options.get('batch_size', None)
     # Regularisation
     options['l1'] = options.get('l1', 0.0)
@@ -25,8 +24,6 @@ def set_defaults(options):
     options['pooling'] = options.get('pooling', False)
     options['pooling_activ'] = options.get('pooling_activ', 'sum')
     options['lr'] = options.get('learning_rate', 1e-2)
-    options['min_lr'] = options.get('min_lr', 1e-10)
-    options['max_lr'] = options.get('max_lr', 1e-1)
     options['max_itr'] = options.get('max_itr', 10000)
     options['debug'] = options.get('debug', False)
     options['n_layers'] = options.get('n_layers', 1)
