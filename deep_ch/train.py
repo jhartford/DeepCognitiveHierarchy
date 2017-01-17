@@ -155,7 +155,7 @@ def train(options, data, load_params=False, start_epoc=0):
                 # Save progress....
                 save_progress(options, tparams, epoch, best_perf)
 
-            train_ave = running_ave(train_scores, train, epoc)
+            train_ave = running_ave(train_scores, train, epoch)
 
             if epoch > 1000:
                 # Only exit if we're diverging after 1000 iterations
@@ -173,10 +173,11 @@ def train(options, data, load_params=False, start_epoc=0):
     return best_perf, best_par 
 
 
-def running_ave(train_scores, train, epoc):
+def running_ave(train_scores, train, epoch):
     # Check if we're diverging...
     if epoch < 50:
         train_scores[epoch] = train
+        train_ave = train
     else:
         # keep moving average of training set performance
         train_scores.pop(0)
@@ -233,7 +234,7 @@ DEFAULT_OPTIONS = {'name': 'test',
                    'activ': 'relu',
                    'pooling': True,
                    'batch_size': None,
-                   'n_layers': 3, 
+                   'n_layers': 1, 
                    'dropout': False, 
                    'l1': 0.01, 
                    'l2': 0.0, 
