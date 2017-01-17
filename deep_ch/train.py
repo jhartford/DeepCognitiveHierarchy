@@ -18,7 +18,7 @@ def state_file_name(options):
     nm = options.get('name', 'train_log')
     sd = options.get('seed', -99)
     fld = options.get('fold', -99)
-    pth = options.get('path', './')
+    pth = options.get('save_path', './')
     filename = pth + nm + str(sd) + str(fld)
     return filename
 
@@ -228,6 +228,7 @@ def get_data(dat, fold, normalise='pool', seed=187, nfolds=10, strat=False):
 
 
 DEFAULT_OPTIONS = {'name': 'test',
+                   'save_path': './',
                    'hidden': [50, 50],
                    'activ': 'relu',
                    'pooling': True,
@@ -245,7 +246,6 @@ DEFAULT_OPTIONS = {'name': 'test',
 def main():
     import bogota.data
     options = DEFAULT_OPTIONS
-    options['path'] = './test_runs/'
     print 'Getting Data'
     data = get_data(bogota.data.cn_all9, 0, normalise=50., seed=101)
     perf, par = train(options, data, False)
