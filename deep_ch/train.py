@@ -1,5 +1,5 @@
 """
-Main trainer function
+Main trainer module
 """
 import theano
 import theano.tensor as tensor
