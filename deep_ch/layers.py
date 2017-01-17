@@ -206,7 +206,7 @@ def param_init_action_response_layer(options, params, constraints, prefix='ar',
     Action response layers.
     '''
     rng = init_rng(rng)
-    n_features = options['hidden'][-1]
+    n_features = options['hidden_units'][-1]
 
     if options['shared_ld']:
         params, constraints = init_level_dist(params, unif_range, nin, rng, constraints)
@@ -227,7 +227,7 @@ def param_init_action_response_layer(options, params, constraints, prefix='ar',
         constraints['simplex'] = constraints.get('simplex', []) + [_p(prefix, 'Wf')]
 
     if level > 0:
-        params[_p(prefix, 'W_h')] = floatx(rng.uniform(size=(1+options['hidden'][-1]),
+        params[_p(prefix, 'W_h')] = floatx(rng.uniform(size=(1+options['hidden_units'][-1]),
                                             low=-0.01,
                                             high=0.01))
     if level > 0:
