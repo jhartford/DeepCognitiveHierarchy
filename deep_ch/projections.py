@@ -1,4 +1,3 @@
-import simplex
 import numpy
 
 def get_operator(name):

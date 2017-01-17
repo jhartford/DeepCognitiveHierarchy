@@ -206,7 +206,7 @@ def param_init_action_response_layer(options, params, constraints, prefix='ar',
     Action response layers.
     '''
     rng = init_rng(rng)
-    n_features = options['hidden'][-1] + options['n_exp']
+    n_features = options['hidden'][-1]
 
     if options['shared_ld']:
         params, constraints = init_level_dist(params, unif_range, nin, rng, constraints,

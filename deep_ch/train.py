@@ -40,8 +40,8 @@ def save_progress(options, tparams, epoch, best_perf):
     sd = options.get('seed', -99)
     fld = options.get('fold', -99)
     with open(state_file_name(options) +'.tmp', 'a') as w:
-        w.write('%d,%d,%d,%f,%f,%f\n' % (epoch, sd, fld, 
-            best_perf[0], best_perf[1], best_perf[2]))
+        w.write('%d,%d,%d,%f,%f\n' % (epoch, sd, fld, 
+            best_perf[0], best_perf[1]))
     pickle.dump(unzip(tparams),
                 open(state_file_name(options) +'.pkl', 'w'))
 
@@ -145,18 +145,6 @@ def train(options, data, load_params=False, start_epoc=0):
             f_update(lr)
             apply_proximity(tparams, operators)
             train = list_update(data[0], f_eval, options['batch_size'], rng=rng)
-            if options['backtracking']:
-                while train > old_train:
-                    zipp(par_old, tparams)
-                    lr *= 0.95
-                    f_update(lr)
-                    apply_proximity(tparams, operators)
-                    train = list_update(data[0], f_eval)
-                    if lr < min_lr:
-                        break
-                lr *= 1.1
-                lr = numpy.clip(lr, min_lr, max_lr)
-
             old_train = train
             elapsed_time = time.time() - start_time
             
@@ -252,17 +240,15 @@ def get_data(dat, fold, normalise='pool', seed=187, nfolds=10, strat=False):
 
 
 DEFAULT_OPTIONS = {'name': 'test', 'feature_response':False, 'hidden': [50, 50],
-               'col_hidden':[0], 'activ': 'relu',
-               'dominance': True,
+               'activ': 'relu',
                'pooling': True,
                'batch_size': None,
-               'col_activ': 'relu',
                'n_layers': 1, 'dropout': False, 'reduce':'sum',
                'opt_sharpness': False,
                'l1': 0.01, 'l2': 0.0, 'learning_rate': .5,
                'min_lr': 1e-4,'pooling_activ':'max', 'max_lr': 10., 'shared_ld': False,
-               'opt': 'rmsprop', 'backtracking': False, 'ar_sharpen': 1.,
-               'max_itr': 25000, 'lam_scaling': 100., 'simplex': True,
+               'opt': 'adam', 
+               'max_itr': 25, 'simplex': True,
                'model_seed': 3, 'ar_features': False,
                'objective': 'nll'}
 
