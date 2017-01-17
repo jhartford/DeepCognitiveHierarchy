@@ -230,11 +230,11 @@ def get_data(dat, fold, normalise='pool', seed=187, nfolds=10, strat=False):
 
 DEFAULT_OPTIONS = {'name': 'test',
                    'save_path': './',
-                   'hidden': [50, 50],
+                   'hidden_units': [50, 50],
                    'activ': 'relu',
                    'pooling': True,
                    'batch_size': None,
-                   'n_layers': 1, 
+                   'ar_layers': 1, 
                    'dropout': False, 
                    'l1': 0.01, 
                    'l2': 0.0, 

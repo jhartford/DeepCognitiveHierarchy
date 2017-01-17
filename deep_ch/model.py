@@ -26,13 +26,13 @@ def set_defaults(options):
     options['lr'] = options.get('learning_rate', 1e-2)
     options['max_itr'] = options.get('max_itr', 10000)
     options['debug'] = options.get('debug', False)
-    options['n_layers'] = options.get('n_layers', 1)
+    options['ar_layers'] = options.get('ar_layers', 1)
     options['dropout'] = options.get('dropout', False)
     options['dropout_rate'] = options.get('dropout_rate', 0.8)
-    options['hidden'] = options.get('hidden', [0])
+    options['hidden_units'] = options.get('hidden_units', [0])
     options['shared_ld'] = options.get('shared_ld', True)
     options['activ'] = options.get('activ', ['linear'] *
-                                   len(options['hidden']))
+                                   len(options['hidden_units']))
     # weighting of the validation set relative to the training set for
     # selecting best performing model
     options['percent_valid'] = options.get('percent_valid', 0.)
@@ -51,7 +51,7 @@ def init_params(options, rng=None):
 
     input_size = 2 # number of player utilities
 
-    n_hidden = [input_size] + options['hidden']
+    n_hidden = [input_size] + options['hidden_units']
     for i in xrange(1, len(n_hidden)):
         params = get_layer('hid')[0](options, params, prefix='hidden%02d' % i,
                                      nin=n_hidden[i-1] * (3 if options['pooling'] else 1), # 3 x parameters if pooling used
@@ -60,18 +60,18 @@ def init_params(options, rng=None):
     params = get_layer('softmax')[0](options, params, nin=n_hidden[-1],
                                      rng=rng)
 
-    n_layers = options['n_layers']
+    ar_layers = options['ar_layers']
 
-    for i in range(n_layers):
+    for i in range(ar_layers):
         for p in range(2):
-            if i == n_layers - 1 and p == 1:
+            if i == ar_layers - 1 and p == 1:
                 # don't build ar layer for pl 2 in the last layer because it is not used
                 continue
             params, constraints = get_layer('ar')[0](options, params,
                                         prefix='p%d_ar%d' % (p, i),
-                                        nin=n_layers, level=i, rng=rng,
+                                        nin=ar_layers, level=i, rng=rng,
                                         constraints=constraints)
-    params, constraints = get_layer('output')[0](options, params, constraints, rng=rng, nin=n_layers)
+    params, constraints = get_layer('output')[0](options, params, constraints, rng=rng, nin=ar_layers)
     return params, constraints
 
 def to_list(x, n):
@@ -87,7 +87,7 @@ def build_features(x, tparams, options, use_noise, trng, normalise=True):
     prev = x
     
     hidden_outputs = []
-    n_hidden = len(options['hidden'])
+    n_hidden = len(options['hidden_units'])
     activ = to_list(options['activ'], n_hidden)
 
     for i in xrange(n_hidden):
@@ -122,15 +122,15 @@ def build_ar_layers(x, tparams, options, features, hiddens):
                                                 u2.shape[1],
                                                 u2.shape[2])), h2), axis=1))
 
-    n_layers = options['n_layers']
+    ar_layers = options['ar_layers']
 
     ar_lists = ([], [])
     opp = [None, None]
     weighted_feature_list = ([], [])
     br_list = ([], [])
-    for i in range(n_layers):
+    for i in range(ar_layers):
         for p in range(2):
-            if i == (n_layers - 1) and p == 1:
+            if i == (ar_layers - 1) and p == 1:
                 continue  # don't build ar layer for pl 2 in the last layer
             feat = features[p]
             ar, weighted_features, br = get_layer('ar')[1](tparams,
@@ -151,10 +151,10 @@ def build_ar_layers(x, tparams, options, features, hiddens):
                 br_list[p].append(br)
 
         # append each layer then update the opposition variable...
-        if i < n_layers - 1:
+        if i < ar_layers - 1:
             for p in range(2):
                 opp[1 - p] = ar_lists[p][i]
-    # return ar_lists[0][n_layers-1]
+    # return ar_lists[0][ar_layers-1]
     return ar_lists, weighted_feature_list, br_list
 
 
@@ -177,8 +177,8 @@ def build_model(tparams, options, rng=None):
                                                           opp_features),
                                                          (hidden1[-1],
                                                           hidden2[-1]))
-    n_layers = options['n_layers']
-    out = get_layer('output')[1](tparams, ar[0][n_layers-1], options)
+    ar_layers = options['ar_layers']
+    out = get_layer('output')[1](tparams, ar[0][ar_layers-1], options)
 
     intermediate_fns = {'ar': ar,
                         'own_features': own_features,
