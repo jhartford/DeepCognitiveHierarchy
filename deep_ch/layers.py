@@ -209,8 +209,7 @@ def param_init_action_response_layer(options, params, constraints, prefix='ar',
     n_features = options['hidden'][-1]
 
     if options['shared_ld']:
-        params, constraints = init_level_dist(params, unif_range, nin, rng, constraints,
-                                            simplex=simplex)
+        params, constraints = init_level_dist(params, unif_range, nin, rng, constraints)
     else:
         if level > 0:
             params[_p(prefix, 'ld')] = floatx(rng.uniform(size=(level),
