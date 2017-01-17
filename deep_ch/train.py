@@ -2,23 +2,17 @@
 Main trainer function
 """
 import theano
+import theano.tensor as tensor
 import numpy
-import json
-import sys
+
 import time
 import cPickle as pickle
-import theano.tensor as tensor
-from collections import OrderedDict
-try:
-    import bogota.data
-except:
-    print 'Bogota import failed...'
 
 from projections import get_operator
 from model import init_params, build_model, set_defaults
-from utils import init_tparams, itemlist, floatx, zipp, unzip, print_params, split_params
+from utils import init_tparams, itemlist, floatx, unzip
 from optim import get_optim
-from data import encode_pool_list, filter_games
+from data import encode_pool_list
 
 def state_file_name(options):
     nm = options.get('name', 'train_log')
@@ -239,25 +233,25 @@ def get_data(dat, fold, normalise='pool', seed=187, nfolds=10, strat=False):
     return data
 
 
-DEFAULT_OPTIONS = {'name': 'test', 'feature_response':False, 'hidden': [50, 50],
-               'activ': 'relu',
-               'pooling': True,
-               'batch_size': None,
-               'n_layers': 1, 'dropout': False, 'reduce':'sum',
-               'opt_sharpness': False,
-               'l1': 0.01, 'l2': 0.0, 'learning_rate': .5,
-               'min_lr': 1e-4,'pooling_activ':'max', 'max_lr': 10., 'shared_ld': False,
-               'opt': 'adam', 
-               'max_itr': 25, 'simplex': True,
-               'model_seed': 3, 'ar_features': False,
-               'objective': 'nll'}
+DEFAULT_OPTIONS = {'name': 'test',
+                   'hidden': [50, 50],
+                   'activ': 'relu',
+                   'pooling': True,
+                   'batch_size': None,
+                   'n_layers': 3, 
+                   'dropout': False, 
+                   'l1': 0.01, 
+                   'l2': 0.0, 
+                   'pooling_activ':'max', 
+                   'opt': 'adam', 
+                   'max_itr': 25000, 
+                   'model_seed': 3, 
+                   'objective': 'nll'}
 
 def main():
-    if len(sys.argv) == 1:
-        options = DEFAULT_OPTIONS
-    else:
-        options = json.load(open(sys.argv[1]))
-        options['path'] = './test_runs/'
+    import bogota.data
+    options = DEFAULT_OPTIONS
+    options['path'] = './test_runs/'
     print 'Getting Data'
     data = get_data(bogota.data.cn_all9, 0, normalise=50., seed=101)
     perf, par = train(options, data, False)
