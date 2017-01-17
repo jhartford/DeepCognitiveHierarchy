@@ -22,9 +22,6 @@ def state_file_name(options):
     filename = pth + nm + str(sd) + str(fld)
     return filename
 
-def nll(x, y):
-    return -tensor.sum(tensor.log(x) * y)
-
 def load_par(options):
     filename = state_file_name(options) +'.pkl'
     par = pickle.load(open(filename))
@@ -54,6 +51,9 @@ def apply_proximity(tparams, operators):
             # apply projection
             projected = op_fn(tparams[key].get_value())
             tparams[key].set_value(projected)
+
+def nll(x, y):
+    return -tensor.sum(tensor.log(x) * y)
 
 def train(options, data, load_params=False, start_epoc=0):
     print 'Setting up model with options:'
@@ -155,6 +155,7 @@ def train(options, data, load_params=False, start_epoc=0):
                 # Save progress....
                 save_progress(options, tparams, epoch, best_perf)
 
+            # Check if we're diverging...
             train_ave = running_ave(train_scores, train, epoch)
 
             if epoch > 1000:
@@ -174,7 +175,6 @@ def train(options, data, load_params=False, start_epoc=0):
 
 
 def running_ave(train_scores, train, epoch):
-    # Check if we're diverging...
     if epoch < 50:
         train_scores[epoch] = train
         train_ave = train
