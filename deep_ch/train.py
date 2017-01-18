@@ -12,7 +12,7 @@ from projections import get_operator
 from model import init_params, build_model, set_defaults
 from utils import init_tparams, itemlist, floatx, unzip
 from optim import get_optim
-from data import encode_pool_list
+from data import encode_pool_list, GameData
 
 def state_file_name(options):
     nm = options.get('name', 'train_log')
@@ -248,8 +248,10 @@ def main():
     import bogota.data
     options = DEFAULT_OPTIONS
     print 'Getting Data'
-    data = get_data(bogota.data.cn_all9, 0, normalise=50., seed=101)
-    perf, par = train(options, data, False)
+    #data = get_data(bogota.data.cn_all9, 0, normalise=50., seed=101)
+    data = GameData('./all9.csv', 50.)
+    train_data, test_data = data.train_test(0, seed=101)
+    perf, par = train(options, [train_data.datalist(), test_data.datalist()], False)
     for k, v in par.iteritems():
         print k
         print v
