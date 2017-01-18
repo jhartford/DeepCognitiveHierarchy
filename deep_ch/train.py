@@ -221,13 +221,6 @@ def list_update(data, model, batchsize=None, f_update=None, return_n_obs=False, 
         return loss
 
 
-def get_data(dat, fold, normalise='pool', seed=187, nfolds=10, strat=False):
-    train, test = dat.train_fold_gamewise(seed, nfolds, fold, True, stratified=strat)
-    data = [encode_pool_list(train, normalise),
-            encode_pool_list(test, normalise)]
-    return data
-
-
 DEFAULT_OPTIONS = {'name': 'test',
                    'save_path': './',
                    'hidden_units': [50, 50],
@@ -245,10 +238,8 @@ DEFAULT_OPTIONS = {'name': 'test',
                    'objective': 'nll'}
 
 def main():
-    import bogota.data
     options = DEFAULT_OPTIONS
     print 'Getting Data'
-    #data = get_data(bogota.data.cn_all9, 0, normalise=50., seed=101)
     data = GameData('./all9.csv', 50.)
     train_data, test_data = data.train_test(0, seed=101)
     perf, par = train(options, [train_data.datalist(), test_data.datalist()], False)

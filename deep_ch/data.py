@@ -227,3 +227,11 @@ def encode_pool_list(pool, normalize_by=None):
 
     return output_games
 
+def get_data(dat, fold, normalise=50., seed=101, nfolds=10, strat=False):
+    '''
+    Data preparation function for Bogota datapools. 
+    '''
+    train, test = dat.train_fold_gamewise(seed, nfolds, fold, True, stratified=strat)
+    data = [encode_pool_list(train, normalise),
+            encode_pool_list(test, normalise)]
+    return data
