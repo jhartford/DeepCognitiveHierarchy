@@ -9,6 +9,98 @@ try:
 except:
     'Bogota import failed...'
 
+class GameData(object):
+    def __init__(self, filename=None, normalize=1.):
+        self._data = {}
+        if filename is not None:
+            self.read_csv(filename, normalize)
+        
+    def add_game(self, payoffs, actioncounts, shape):
+        if shape in self._data:
+            self._data[shape][0] = np.vstack((self._data[shape][0], payoffs))
+            self._data[shape][1] = np.vstack((self._data[shape][1], actioncounts))
+        else:
+            payoffs = payoffs.reshape((1, payoffs.shape[0]))
+            actioncounts = actioncounts.reshape((1, actioncounts.shape[0]))
+            self._data[shape] = [payoffs, actioncounts]
+    
+    def datalist(self):
+        return self._data
+
+    def read_csv(self, filename, normalize=1.):
+        with open(filename) as f:
+            for i, line in enumerate(f):
+                if i ==0:
+                    continue
+                else:
+                    title, shape, payoffs, actioncounts = line.split('\t')
+                    shape = tuple(eval(shape))
+                    payoffs = np.array(eval(payoffs)) / float(normalize)
+                    actioncounts = np.array(eval(actioncounts))
+                    self.add_game(payoffs, actioncounts, shape)
+    
+    def _generate_game_dictionary(self):
+        game_dict = {}
+        for shape, games in self._data.iteritems():
+            for payoff, actions in zip(games[0],games[1]):
+                idx = tuple(payoff) 
+                if idx in game_dict:
+                    game_dict[idx] = (shape, game_dict[idx][1] + actions)
+                else:
+                    game_dict[idx] = (shape, actions)
+        return game_dict
+    
+    def _split_indices_into_folds(self, indices, num_folds):
+        n = len(indices)
+        s = n/num_folds
+        fold_indices = [list(indices)[i*s:(i+1)*s] for i in range(num_folds)] 
+        for idx, i in enumerate(list(indices)[s*num_folds:]):
+            fold_indices[idx] += [i]
+        return fold_indices
+
+    def train_test(self, fold, num_folds=10, seed=123):
+        rng = np.random.RandomState(seed)
+        gd = self._generate_game_dictionary()
+        game_idx = gd.keys()
+        indices = range(len(gd.keys()))
+        rng.shuffle(indices)
+        fold_indices = self._split_indices_into_folds(indices, num_folds)
+        train = GameData()
+        test = GameData()
+        for i, fold_idx in enumerate(fold_indices):
+            for idx in fold_idx:
+                shape, actioncount = gd[game_idx[idx]]
+                if i != fold:
+                    train.add_game(np.array(game_idx[idx]), actioncount, shape)
+                else:
+                    test.add_game(np.array(game_idx[idx]), actioncount, shape)
+        return train, test
+
+def write_datapool(pool, filename):
+    '''
+    Given a Bogota datapool, write it to file.
+    '''
+    with open(filename,'w') as f:
+        f.write('title\tshape\tpayoffs\tactioncounts\n')
+        for wp in pool:
+            shape = [len(pl.strategies) for pl in wp.game.players]
+            dnp = np.array(wp.denormalized_profile())
+            title = '.'.join(wp.game.title.split('.')[2:])
+            player1_actions = sum([dnp[i] for i in range(shape[0])])
+            player2_actions = wp.n - player1_actions
+            player1payoffs = encode_game(wp.game, shape)
+            Y = dnp[0:shape[0]]
+            X = player1payoffs
+            f.write('\t'.join([str(i) for i in [title,shape,list(X),list(Y)]])+'\n')
+            if player2_actions > 0:
+                Y = dnp[shape[0]:shape[0] + shape[1]]
+                p2 = player1payoffs.copy()
+                p2 = p2.reshape((1, 2, shape[0], shape[1]))
+                X = p2.transpose((0, 1, 3, 2))[:, [1, 0], :, :]
+                X = X.reshape((2*shape[0]*shape[1]))
+                shape = [shape[1], shape[0]]
+                f.write('\t'.join([str(i) for i in [title,shape,list(X),list(Y)]])+'\n')
+
 def filter_games(pool, shape=[3, 3]):
     """
     Return a subset of 'pool' containing only games that match 'shape'.
