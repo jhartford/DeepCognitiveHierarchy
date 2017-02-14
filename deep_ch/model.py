@@ -20,7 +20,7 @@ def set_defaults(options):
     options['l1'] = options.get('l1', 0.0)
     options['l2'] = options.get('l2', 0.0)
     # Optimisation method
-    options['opt'] = options.get('opt', 'sgd')
+    options['opt'] = options.get('opt', 'adam')
     options['pooling'] = options.get('pooling', False)
     options['pooling_activ'] = options.get('pooling_activ', 'sum')
     options['lr'] = options.get('learning_rate', 1e-2)

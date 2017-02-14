@@ -22,6 +22,7 @@ from theano.tensor.shared_randomstreams import RandomStreams
 def get_optim(name):
     return eval(name)
 
+
 def sgd(lr, tparams, grads, inp, cost, use_noise,**kwargs):
     print 'Using SGD'
     gshared = [theano.shared(p.get_value() * floatx(0.), name='%s_grad' % k)
@@ -57,6 +58,13 @@ def adam(lr, tparams, grads, inp, cost, use_noise, **kwargs):
     fix1 = floatx(1.) - b1**(i_t)
     fix2 = floatx(1.) - b2**(i_t)
     lr_t = lr0 * (tensor.sqrt(fix2) / fix1)
+    print "++++++"*10
+    print "LR!: ", lr_t
+    print "++++++"*10
+
+    # m = beta1 * m + (1 - beta1) * dx
+    # v = beta2 * v + (1 - beta2) * (dx ** 2)
+    # x += - learning_rate * m / (np.sqrt(v) + eps)
 
     for p, g in zip(tparams.values(), gshared):
         m = theano.shared(p.get_value() *floatx( 0.))
