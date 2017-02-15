@@ -39,6 +39,17 @@ def sgd(lr, tparams, grads, inp, cost, use_noise,**kwargs):
 
 
 def adam(lr, tparams, grads, inp, cost, use_noise, **kwargs):
+    '''
+    See: Adam - a method for stochastic optimization. https://arxiv.org/abs/1412.6980
+
+    Note that when using Adam, the lr learning rate parameter does nothing because Adam chooses 
+    per-parameter learning rates. If you want to be able to manually turn down the learning rate,
+    you can modify the parameter update line:
+    p_t = p - (lr_t * g_t)
+    to:
+    p_t = p - lr * (lr_t * g_t)
+    so that you have a global learning rate parameter.
+    '''
     gshared = [theano.shared(p.get_value() * floatx(0.), name='%s_grad' % k)
                for k, p in tparams.iteritems()]
     gsup = [(gs, gs + g) for gs, g in zip(gshared, grads)]
