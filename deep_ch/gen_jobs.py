@@ -19,27 +19,10 @@ defaults = {'name': 'test',
                    'model_seed': 3,
                    'objective': 'nll'}
 
-keys = ['name', 'save_path', 'hidden_units', 'activ', 'pooling', 'batch_size', 'ar_layers', 'dropout',
-        'l1', 'l2', 'pooling_activ', 'opt', 'max_itr', 'model_seed', 'objective']
-
-# defaults = {'name': 'dirtest3', 'dataset': 'all9', 'normalise': 500.,
-#                 'seed':187, 'hidden': [2], 'activ': ['relu'],
-#                                 'col_hidden': [5],
-#                 'n_layers': 7, 'dropout': False, 'l1': 0.0, 'learning_rate': 1e-1,
-#                 'min_lr': 1e-10, 'max_lr': 10.,
-#                 'opt': 'sgd', 'backtracking':True, 'percent_valid':0., 'simplex': True, 'ar_sharpen': 100.,
-#                 'max_itr': 10000, 'lam_scaling':50., 'anneal': False, 'model_seed': 123}
-# keys = ['name', 'dataset', 'normalise','seed', 'hidden', 'col_hidden', 'activ', 'n_layers', 'dropout', 'l1', 'learning_rate',
-#         'min_lr', 'max_lr', 'opt', 'backtracking', 'simplex', 'max_itr', 'lam_scaling', 'ar_sharpen', 'anneal', 'percent_valid', 'model_seed']
-
-#PATH = '001_Oct'
-
-
 def main():
-    settings = OrderedDict()       # Why is settings an ordered dict?
+    settings = {}
     if len(sys.argv) == 2:
-        for k in keys:
-            settings[k] = defaults[k]
+        settings = defaults
     else:
         settings = json.load(open(sys.argv[2]))
     print "SETTINGS: ", settings
@@ -55,7 +38,6 @@ def main():
             print(filename)
             with open(filename+'.json', 'w') as f:
                 json.dump(settings, f, indent=2)
-
 
 # Usage: argv[1] should be a path to a writable directory where json files would go
 if __name__ == '__main__':
