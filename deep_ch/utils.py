@@ -6,8 +6,6 @@ https://github.com/ryankiros/visual-semantic-embedding/blob/master/utils.py
 Which is mostly modified from:
 https://github.com/fh295/DefGen2
 """
-# Own functions
-# from data import encode_game
 
 # Numerical libraries
 import theano
@@ -186,17 +184,6 @@ def concatenate(tensor_list, axis=0):
         offset += tt.shape[axis]
 
     return out
-
-
-# def apply_fun_to_game(g, fun):
-#     '''
-#     Given a gambit game return the mixed strategies for both players
-#     '''
-#     i, j = [len(pl.strategies) for pl in g.players]
-#     X = encode_game(g).reshape(1, 2, i, j)
-#     p1 = fun(X)
-#     p2 = fun(X.transpose((0, 1, 3, 2))[:, [1, 0], :, :])
-#     return numpy.hstack((p1, p2)).flatten()
 
 
 def par_to_lists(par):
