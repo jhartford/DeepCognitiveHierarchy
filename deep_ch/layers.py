@@ -41,6 +41,16 @@ def get_layer(name):
     fns = layers[name]
     return (eval(fns[0]), eval(fns[1]))
 
+def dropout_layer(state_before, use_noise, options, trng):
+    p = options['dropout_rate']
+    #p = 0.8
+    proj = tensor.switch(use_noise, 
+            state_before * trng.binomial(state_before.shape,
+                p=p, n=1, dtype=state_before.dtype),
+            state_before * p)
+    print 'built dropout layer for ', state_before
+    return proj
+
 
 # Hidden layer
 def param_init_hid_layer(options, params, prefix='hidden',
